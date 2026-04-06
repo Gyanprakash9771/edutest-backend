@@ -10,8 +10,7 @@ const app = express();
 
 // ✅ PROPER CORS FIX (FINAL CLEAN VERSION)
 const cors = require("cors");
-
-app.use(cors()); // ✅ simplified & safest
+app.use(cors());
 
 // ✅ ADD THIS (CRITICAL FIX)
 app.disable("etag");
@@ -42,7 +41,9 @@ app.get("/", (req, res) => {
   res.send("API is running...");
 });
 
-// start server
-app.listen(5000, () => {
-  console.log("Server running on port 5000");
+// ✅ FIXED: dynamic PORT for Render
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
