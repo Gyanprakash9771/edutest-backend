@@ -1,0 +1,48 @@
+const express = require("express");
+const mongoose = require("mongoose");
+require("dotenv").config();
+
+const authRoutes = require("./routes/authRoutes");
+const courseRoutes = require("./routes/courseRoutes");
+const adminAuthRoutes = require("./routes/adminAuthRoutes");
+
+const app = express();
+
+// ✅ PROPER CORS FIX (FINAL CLEAN VERSION)
+const cors = require("cors");
+
+app.use(cors()); // ✅ simplified & safest
+
+// ✅ ADD THIS (CRITICAL FIX)
+app.disable("etag");
+
+// cache fix
+app.use((req, res, next) => {
+  res.setHeader("Cache-Control", "no-store");
+  next();
+});
+
+app.use(express.json());
+
+// serve uploaded images
+app.use("/uploads", express.static("uploads"));
+
+// MongoDB connection
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log("MongoDB Connected"))
+  .catch(err => console.log(err));
+
+// routes
+app.use("/api/auth", authRoutes);
+app.use("/api/courses", courseRoutes);
+app.use("/api/admin", adminAuthRoutes);
+
+// test route
+app.get("/", (req, res) => {
+  res.send("API is running...");
+});
+
+// start server
+app.listen(5000, () => {
+  console.log("Server running on port 5000");
+});
