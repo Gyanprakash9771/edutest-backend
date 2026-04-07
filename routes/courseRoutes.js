@@ -22,27 +22,37 @@ const upload = multer({ storage });
 router.post("/", upload.single("image"), async (req, res) => {
   try {
     console.log("BODY:", req.body);
+
     let whatYouWillLearn = [];
     let courseContent = [];
 
-
-    // ✅ SAFE PARSE + DEBUG
+    // ✅ FIXED PARSING (IMPORTANT)
     try {
       if (req.body.whatYouWillLearn) {
         console.log("RAW learn:", req.body.whatYouWillLearn);
-        whatYouWillLearn = JSON.parse(req.body.whatYouWillLearn);
+
+        whatYouWillLearn =
+          typeof req.body.whatYouWillLearn === "string"
+            ? JSON.parse(req.body.whatYouWillLearn)
+            : req.body.whatYouWillLearn;
       }
     } catch (e) {
       console.log("❌ Learn parse error:", e.message);
+      whatYouWillLearn = [];
     }
 
     try {
       if (req.body.courseContent) {
         console.log("RAW content:", req.body.courseContent);
-        courseContent = JSON.parse(req.body.courseContent);
+
+        courseContent =
+          typeof req.body.courseContent === "string"
+            ? JSON.parse(req.body.courseContent)
+            : req.body.courseContent;
       }
     } catch (e) {
       console.log("❌ Content parse error:", e.message);
+      courseContent = [];
     }
 
     // ✅ DEBUG FINAL DATA
@@ -109,22 +119,33 @@ router.put("/:id", upload.single("image"), async (req, res) => {
     let whatYouWillLearn = [];
     let courseContent = [];
 
+    // ✅ FIXED PARSING (IMPORTANT)
     try {
       if (req.body.whatYouWillLearn) {
         console.log("RAW learn:", req.body.whatYouWillLearn);
-        whatYouWillLearn = JSON.parse(req.body.whatYouWillLearn);
+
+        whatYouWillLearn =
+          typeof req.body.whatYouWillLearn === "string"
+            ? JSON.parse(req.body.whatYouWillLearn)
+            : req.body.whatYouWillLearn;
       }
     } catch (e) {
       console.log("❌ Learn parse error:", e.message);
+      whatYouWillLearn = [];
     }
 
     try {
       if (req.body.courseContent) {
         console.log("RAW content:", req.body.courseContent);
-        courseContent = JSON.parse(req.body.courseContent);
+
+        courseContent =
+          typeof req.body.courseContent === "string"
+            ? JSON.parse(req.body.courseContent)
+            : req.body.courseContent;
       }
     } catch (e) {
       console.log("❌ Content parse error:", e.message);
+      courseContent = [];
     }
 
     console.log("FINAL UPDATE DATA:", { whatYouWillLearn, courseContent });
