@@ -21,12 +21,34 @@ const upload = multer({ storage });
 // ADD COURSE
 router.post("/", upload.single("image"), async (req, res) => {
   try {
+    // ✅ PARSE JSON FIELDS
+    let whatYouWillLearn = [];
+    let courseContent = [];
+
+    if (req.body.whatYouWillLearn) {
+      whatYouWillLearn = JSON.parse(req.body.whatYouWillLearn);
+    }
+
+    if (req.body.courseContent) {
+      courseContent = JSON.parse(req.body.courseContent);
+    }
+
     const course = new Course({
       title: req.body.title,
       lessons: Number(req.body.lessons),
       category: req.body.category,
       level: req.body.level,
       image: req.file ? req.file.filename : null,
+
+      // ✅ NEW FIELDS (added only)
+      description: req.body.description,
+      instructor: req.body.instructor,
+      duration: req.body.duration,
+      enrolled: Number(req.body.enrolled),
+      language: req.body.language,
+      price: req.body.price,
+      whatYouWillLearn,
+      courseContent,
     });
 
     await course.save();
@@ -43,7 +65,7 @@ router.get("/", async (req, res) => {
   res.json(courses);
 });
 
-// ✅ GET SINGLE COURSE (DETAIL PAGE)
+// GET SINGLE COURSE
 router.get("/:id", async (req, res) => {
   try {
     const course = await Course.findById(req.params.id);
@@ -70,11 +92,32 @@ router.put("/:id", upload.single("image"), async (req, res) => {
   try {
     console.log("UPDATE HIT:", req.params.id);
 
+    let whatYouWillLearn = [];
+    let courseContent = [];
+
+    if (req.body.whatYouWillLearn) {
+      whatYouWillLearn = JSON.parse(req.body.whatYouWillLearn);
+    }
+
+    if (req.body.courseContent) {
+      courseContent = JSON.parse(req.body.courseContent);
+    }
+
     const updatedData = {
       title: req.body.title,
       lessons: Number(req.body.lessons),
       category: req.body.category,
       level: req.body.level,
+
+      // ✅ NEW FIELDS
+      description: req.body.description,
+      instructor: req.body.instructor,
+      duration: req.body.duration,
+      enrolled: Number(req.body.enrolled),
+      language: req.body.language,
+      price: req.body.price,
+      whatYouWillLearn,
+      courseContent,
     };
 
     if (req.file) {
