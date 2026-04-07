@@ -19,9 +19,10 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // ADD COURSE
-router.post("/", upload.single("image"), async (req, res) => {
+router.post("/", upload.any(), async (req, res) => {   // ✅ FIXED HERE
   try {
     console.log("BODY:", req.body);
+    console.log("FILES:", req.files);
 
     let whatYouWillLearn = [];
     let courseContent = [];
@@ -63,7 +64,7 @@ router.post("/", upload.single("image"), async (req, res) => {
       lessons: Number(req.body.lessons),
       category: req.body.category,
       level: req.body.level,
-      image: req.file ? req.file.filename : null,
+      image: req.files?.[0]?.filename || null, // ✅ small safe fix
 
       description: req.body.description,
       instructor: req.body.instructor,
@@ -112,14 +113,14 @@ router.delete("/:id", async (req, res) => {
 });
 
 // UPDATE COURSE
-router.put("/:id", upload.single("image"), async (req, res) => {
+router.put("/:id", upload.any(), async (req, res) => {   // ✅ FIXED HERE
   try {
     console.log("UPDATE HIT:", req.params.id);
 
     let whatYouWillLearn = [];
     let courseContent = [];
 
-    // ✅ FIXED PARSING (IMPORTANT)
+    // ✅ FIXED PARSING
     try {
       if (req.body.whatYouWillLearn) {
         console.log("RAW learn:", req.body.whatYouWillLearn);
@@ -166,8 +167,8 @@ router.put("/:id", upload.single("image"), async (req, res) => {
       courseContent,
     };
 
-    if (req.file) {
-      updatedData.image = req.file.filename;
+    if (req.files?.[0]) {
+      updatedData.image = req.files[0].filename;
     }
 
     const updatedCourse = await Course.findByIdAndUpdate(
