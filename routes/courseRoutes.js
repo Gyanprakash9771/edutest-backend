@@ -21,8 +21,10 @@ const upload = multer({ storage });
 // ADD COURSE
 router.post("/", upload.single("image"), async (req, res) => {
   try {
+    console.log("BODY:", req.body);
     let whatYouWillLearn = [];
     let courseContent = [];
+
 
     // ✅ SAFE PARSE + DEBUG
     try {
