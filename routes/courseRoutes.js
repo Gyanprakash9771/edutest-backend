@@ -51,9 +51,14 @@ router.post("/", upload.any(), async (req, res) => {
       courseContent = [];
     }
 
+    // ✅ AUTO CALCULATE LESSONS
+    const totalLessons = courseContent.reduce((acc, section) => {
+      return acc + (section.lectures?.length || 0);
+    }, 0);
+
     const course = new Course({
       title: req.body.title,
-      lessons: Number(req.body.lessons),
+      lessons: totalLessons, // ✅ AUTO
       category: req.body.category,
       level: req.body.level,
       image: req.files?.[0]?.filename || null,
@@ -76,14 +81,12 @@ router.post("/", upload.any(), async (req, res) => {
   }
 });
 
-// ✅ GET ALL COURSES (UPDATED RESPONSE ONLY)
+// GET ALL COURSES
 router.get("/", async (req, res) => {
   const courses = await Course.find();
 
   const formatted = courses.map((course) => ({
     ...course._doc,
-
-    // 🔥 SAFE TRANSFORM (NO BREAK)
     thumbnail: course.image || "",
     totalLessons: course.lessons || 0,
     students: course.enrolled || 0,
@@ -92,7 +95,7 @@ router.get("/", async (req, res) => {
   res.json(formatted);
 });
 
-// ✅ GET SINGLE COURSE (MAIN FIX 🔥)
+// GET SINGLE COURSE
 router.get("/:id", async (req, res) => {
   try {
     const course = await Course.findById(req.params.id);
@@ -103,20 +106,10 @@ router.get("/:id", async (req, res) => {
 
     res.json({
       ...course._doc,
-
-      // ✅ LEARN FIX
       learn: course.whatYouWillLearn || [],
-
-      // ✅ IMAGE FIX
       thumbnail: course.image || "",
-
-      // ✅ LESSON COUNT
       totalLessons: course.lessons || 0,
-
-      // ✅ ENROLLED
       students: course.enrolled || 0,
-
-      // ✅ SECTIONS FIX (MOST IMPORTANT)
       sections: course.courseContent?.map((section) => ({
         title: section.sectionTitle,
         lessons: section.lectures?.map((lec) => ({
@@ -171,9 +164,14 @@ router.put("/:id", upload.any(), async (req, res) => {
       courseContent = [];
     }
 
+    // ✅ AUTO CALCULATE LESSONS
+    const totalLessons = courseContent.reduce((acc, section) => {
+      return acc + (section.lectures?.length || 0);
+    }, 0);
+
     const updatedData = {
       title: req.body.title,
-      lessons: Number(req.body.lessons),
+      lessons: totalLessons, // ✅ AUTO
       category: req.body.category,
       level: req.body.level,
 
