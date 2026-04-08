@@ -19,7 +19,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // ADD COURSE
-router.post("/", upload.any(), async (req, res) => {   // ✅ FIXED HERE
+router.post("/", upload.any(), async (req, res) => {
   try {
     console.log("BODY:", req.body);
     console.log("FILES:", req.files);
@@ -27,11 +27,8 @@ router.post("/", upload.any(), async (req, res) => {   // ✅ FIXED HERE
     let whatYouWillLearn = [];
     let courseContent = [];
 
-    // ✅ FIXED PARSING (IMPORTANT)
     try {
       if (req.body.whatYouWillLearn) {
-        console.log("RAW learn:", req.body.whatYouWillLearn);
-
         whatYouWillLearn =
           typeof req.body.whatYouWillLearn === "string"
             ? JSON.parse(req.body.whatYouWillLearn)
@@ -44,8 +41,6 @@ router.post("/", upload.any(), async (req, res) => {   // ✅ FIXED HERE
 
     try {
       if (req.body.courseContent) {
-        console.log("RAW content:", req.body.courseContent);
-
         courseContent =
           typeof req.body.courseContent === "string"
             ? JSON.parse(req.body.courseContent)
@@ -56,15 +51,12 @@ router.post("/", upload.any(), async (req, res) => {   // ✅ FIXED HERE
       courseContent = [];
     }
 
-    // ✅ DEBUG FINAL DATA
-    console.log("FINAL DATA:", { whatYouWillLearn, courseContent });
-
     const course = new Course({
       title: req.body.title,
       lessons: Number(req.body.lessons),
       category: req.body.category,
       level: req.body.level,
-      image: req.files?.[0]?.filename || null, // ✅ small safe fix
+      image: req.files?.[0]?.filename || null,
 
       description: req.body.description,
       instructor: req.body.instructor,
@@ -84,13 +76,23 @@ router.post("/", upload.any(), async (req, res) => {   // ✅ FIXED HERE
   }
 });
 
-// GET ALL COURSES
+// ✅ GET ALL COURSES (UPDATED RESPONSE ONLY)
 router.get("/", async (req, res) => {
   const courses = await Course.find();
-  res.json(courses);
+
+  const formatted = courses.map((course) => ({
+    ...course._doc,
+
+    // 🔥 SAFE TRANSFORM (NO BREAK)
+    thumbnail: course.image || "",
+    totalLessons: course.lessons || 0,
+    students: course.enrolled || 0,
+  }));
+
+  res.json(formatted);
 });
 
-// GET SINGLE COURSE
+// ✅ GET SINGLE COURSE (MAIN FIX 🔥)
 router.get("/:id", async (req, res) => {
   try {
     const course = await Course.findById(req.params.id);
@@ -99,7 +101,32 @@ router.get("/:id", async (req, res) => {
       return res.status(404).json({ message: "Course not found" });
     }
 
-    res.json(course);
+    res.json({
+      ...course._doc,
+
+      // ✅ LEARN FIX
+      learn: course.whatYouWillLearn || [],
+
+      // ✅ IMAGE FIX
+      thumbnail: course.image || "",
+
+      // ✅ LESSON COUNT
+      totalLessons: course.lessons || 0,
+
+      // ✅ ENROLLED
+      students: course.enrolled || 0,
+
+      // ✅ SECTIONS FIX (MOST IMPORTANT)
+      sections: course.courseContent?.map((section) => ({
+        title: section.sectionTitle,
+        lessons: section.lectures?.map((lec) => ({
+          title: lec.title,
+          time: lec.duration,
+          type: "video",
+        })) || [],
+      })) || [],
+    });
+
   } catch (err) {
     console.log(err);
     res.status(500).json(err);
@@ -113,18 +140,15 @@ router.delete("/:id", async (req, res) => {
 });
 
 // UPDATE COURSE
-router.put("/:id", upload.any(), async (req, res) => {   // ✅ FIXED HERE
+router.put("/:id", upload.any(), async (req, res) => {
   try {
     console.log("UPDATE HIT:", req.params.id);
 
     let whatYouWillLearn = [];
     let courseContent = [];
 
-    // ✅ FIXED PARSING
     try {
       if (req.body.whatYouWillLearn) {
-        console.log("RAW learn:", req.body.whatYouWillLearn);
-
         whatYouWillLearn =
           typeof req.body.whatYouWillLearn === "string"
             ? JSON.parse(req.body.whatYouWillLearn)
@@ -137,8 +161,6 @@ router.put("/:id", upload.any(), async (req, res) => {   // ✅ FIXED HERE
 
     try {
       if (req.body.courseContent) {
-        console.log("RAW content:", req.body.courseContent);
-
         courseContent =
           typeof req.body.courseContent === "string"
             ? JSON.parse(req.body.courseContent)
@@ -148,8 +170,6 @@ router.put("/:id", upload.any(), async (req, res) => {   // ✅ FIXED HERE
       console.log("❌ Content parse error:", e.message);
       courseContent = [];
     }
-
-    console.log("FINAL UPDATE DATA:", { whatYouWillLearn, courseContent });
 
     const updatedData = {
       title: req.body.title,
