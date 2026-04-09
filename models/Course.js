@@ -3,7 +3,12 @@ const mongoose = require("mongoose");
 const courseSchema = new mongoose.Schema({
   title: String,
   lessons: Number,
-  category: String,
+
+  // ✅ UPDATED (SAFE SUPPORT FOR OLD + NEW)
+  category: {
+    type: mongoose.Schema.Types.Mixed
+  },
+
   level: String,
   image: String,
 

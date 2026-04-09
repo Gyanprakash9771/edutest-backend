@@ -6,6 +6,9 @@ const authRoutes = require("./routes/authRoutes");
 const courseRoutes = require("./routes/courseRoutes");
 const adminAuthRoutes = require("./routes/adminAuthRoutes");
 
+// ✅ ADD THIS
+const categoryRoutes = require("./routes/categoryRoutes");
+
 const app = express();
 
 // ✅ PROPER CORS FIX (FINAL CLEAN VERSION)
@@ -35,6 +38,9 @@ mongoose.connect(process.env.MONGO_URI)
 app.use("/api/auth", authRoutes);
 app.use("/api/courses", courseRoutes);
 app.use("/api/admin", adminAuthRoutes);
+
+// ✅ ADD THIS (NEW CATEGORY ROUTE)
+app.use("/api/categories", categoryRoutes);
 
 // test route
 app.get("/", (req, res) => {
