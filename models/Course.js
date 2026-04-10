@@ -4,7 +4,7 @@ const courseSchema = new mongoose.Schema({
   title: String,
   lessons: Number,
 
-  // ✅ UPDATED (SAFE SUPPORT FOR OLD + NEW)
+  
   category: {
     type: mongoose.Schema.Types.Mixed
   },
@@ -12,7 +12,7 @@ const courseSchema = new mongoose.Schema({
   level: String,
   image: String,
 
-  // ✅ ADDED FIELDS (nothing else changed)
+  
   description: String,
   instructor: String,
   duration: String,

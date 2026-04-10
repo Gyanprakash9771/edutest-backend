@@ -5,11 +5,6 @@ const lessonSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Category",
   },
-  course: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Course",
-  },
-  sectionTitle: String,
 
   lectureTitle: String,
   video: String,

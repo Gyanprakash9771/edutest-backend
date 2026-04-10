@@ -3,7 +3,7 @@ const router = express.Router();
 const Lesson = require("../models/Lesson");
 
 
-
+// ✅ ADD LESSON
 router.post("/", async (req, res) => {
   try {
     const lesson = await Lesson.create(req.body);
@@ -14,18 +14,16 @@ router.post("/", async (req, res) => {
 });
 
 
-
+// ✅ GET LESSONS (FILTER BY CATEGORY ONLY)
 router.get("/", async (req, res) => {
   try {
-    const { category, course } = req.query;
+    const { category } = req.query;
 
     let filter = {};
     if (category) filter.category = category;
-    if (course) filter.course = course;
 
     const lessons = await Lesson.find(filter)
-      .populate("category")
-      .populate("course");
+      .populate("category");
 
     res.json(lessons);
   } catch (err) {
