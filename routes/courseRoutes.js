@@ -3,12 +3,12 @@ const router = express.Router();
 const Course = require("../models/Course");
 const multer = require("multer");
 
-// ✅ ADD THIS (fix CORS preflight)
+
 router.options("/", (req, res) => {
   res.sendStatus(200);
 });
 
-// Image upload setup
+
 const storage = multer.diskStorage({
   destination: "uploads/",
   filename: (req, file, cb) => {
@@ -18,7 +18,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-// ADD COURSE
+
 router.post("/", upload.any(), async (req, res) => {
   try {
     console.log("BODY:", req.body);
@@ -51,14 +51,14 @@ router.post("/", upload.any(), async (req, res) => {
       courseContent = [];
     }
 
-    // ✅ AUTO CALCULATE LESSONS
+    
     const totalLessons = courseContent.reduce((acc, section) => {
       return acc + (section.lectures?.length || 0);
     }, 0);
 
     const course = new Course({
       title: req.body.title,
-      lessons: totalLessons, // ✅ AUTO
+      lessons: totalLessons, 
       category: req.body.category,
       level: req.body.level,
       image: req.files?.[0]?.filename || null,
@@ -82,8 +82,22 @@ router.post("/", upload.any(), async (req, res) => {
 });
 
 // GET ALL COURSES
+// router.get("/", async (req, res) => {
+//   const courses = await Course.find();
+
+//   const formatted = courses.map((course) => ({
+//     ...course._doc,
+//     thumbnail: course.image || "",
+//     totalLessons: course.lessons || 0,
+//     students: course.enrolled || 0,
+//   }));
+
+//   res.json(formatted);
+// });
+
+// GET ALL COURSES
 router.get("/", async (req, res) => {
-  const courses = await Course.find();
+  const courses = await Course.find().populate("category"); // ✅ added populate
 
   const formatted = courses.map((course) => ({
     ...course._doc,
@@ -96,9 +110,39 @@ router.get("/", async (req, res) => {
 });
 
 // GET SINGLE COURSE
+// router.get("/:id", async (req, res) => {
+//   try {
+//     const course = await Course.findById(req.params.id);
+
+//     if (!course) {
+//       return res.status(404).json({ message: "Course not found" });
+//     }
+
+//     res.json({
+//       ...course._doc,
+//       learn: course.whatYouWillLearn || [],
+//       thumbnail: course.image || "",
+//       totalLessons: course.lessons || 0,
+//       students: course.enrolled || 0,
+//       sections: course.courseContent?.map((section) => ({
+//         title: section.sectionTitle,
+//         lessons: section.lectures?.map((lec) => ({
+//           title: lec.title,
+//           time: lec.duration,
+//           type: "video",
+//         })) || [],
+//       })) || [],
+//     });
+
+//   } catch (err) {
+//     console.log(err);
+//     res.status(500).json(err);
+//   }
+// });
+// GET SINGLE COURSE
 router.get("/:id", async (req, res) => {
   try {
-    const course = await Course.findById(req.params.id);
+    const course = await Course.findById(req.params.id).populate("category"); // ✅ added populate
 
     if (!course) {
       return res.status(404).json({ message: "Course not found" });
@@ -126,13 +170,13 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// DELETE COURSE
+
 router.delete("/:id", async (req, res) => {
   await Course.findByIdAndDelete(req.params.id);
   res.json({ message: "Deleted" });
 });
 
-// UPDATE COURSE
+
 router.put("/:id", upload.any(), async (req, res) => {
   try {
     console.log("UPDATE HIT:", req.params.id);
@@ -164,7 +208,7 @@ router.put("/:id", upload.any(), async (req, res) => {
       courseContent = [];
     }
 
-    // ✅ AUTO CALCULATE LESSONS
+    
     const totalLessons = courseContent.reduce((acc, section) => {
       return acc + (section.lectures?.length || 0);
     }, 0);
