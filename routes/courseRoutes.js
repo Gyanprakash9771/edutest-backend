@@ -97,7 +97,7 @@ router.get("/", async (req, res) => {
 });
 
 
-// ✅ GET SINGLE COURSE (🔥 VIDEO FIX HERE)
+// ✅ GET SINGLE COURSE (🔥 FINAL VIDEO FIX USING lessonId)
 router.get("/:id", async (req, res) => {
   try {
     const course = await Course.findById(req.params.id).populate("category");
@@ -106,8 +106,15 @@ router.get("/:id", async (req, res) => {
       return res.status(404).json({ message: "Course not found" });
     }
 
-    // 🔥 FETCH ALL LESSONS OF SAME CATEGORY
-    const lessons = await Lesson.find({ category: course.category });
+    // 🔥 COLLECT ALL lessonIds
+    const lessonIds = course.courseContent.flatMap((section) =>
+      section.lectures.map((lec) => lec.lessonId)
+    );
+
+    // 🔥 FETCH ONLY REQUIRED LESSONS
+    const lessons = await Lesson.find({
+      _id: { $in: lessonIds }
+    });
 
     res.json({
       ...course._doc,
@@ -121,16 +128,15 @@ router.get("/:id", async (req, res) => {
         title: section.sectionTitle,
         lessons: section.lectures?.map((lec) => {
 
-          // 🔥 MATCH LESSON BY TITLE
           const matchedLesson = lessons.find(
-            (l) => l.lectureTitle === lec.title
+            (l) => l._id.toString() === lec.lessonId?.toString()
           );
 
           return {
             title: lec.title,
             time: lec.duration,
             type: "video",
-            video: matchedLesson?.video || null, // ✅ VIDEO COMES HERE
+            video: matchedLesson?.video || null,
           };
         }) || [],
       })) || [],
