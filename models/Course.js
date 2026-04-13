@@ -29,7 +29,8 @@ const courseSchema = new mongoose.Schema({
         {
           lessonId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "Lesson"
+            ref: "Lesson",
+            required: true   // 🔥 ADD THIS LINE
           },
           title: String,
           duration: String
