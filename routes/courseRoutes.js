@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const Course = require("../models/Course");
+const Lesson = require("../models/Lesson"); // 🔥 ADD THIS
 const multer = require("multer");
 
 
@@ -51,14 +52,13 @@ router.post("/", upload.any(), async (req, res) => {
       courseContent = [];
     }
 
-    
     const totalLessons = courseContent.reduce((acc, section) => {
       return acc + (section.lectures?.length || 0);
     }, 0);
 
     const course = new Course({
       title: req.body.title,
-      lessons: totalLessons, 
+      lessons: totalLessons,
       category: req.body.category,
       level: req.body.level,
       image: req.files?.[0]?.filename || null,
@@ -82,31 +82,32 @@ router.post("/", upload.any(), async (req, res) => {
 });
 
 
-
 // GET ALL COURSES
 router.get("/", async (req, res) => {
-  const courses = await Course.find().populate("category"); 
-  console.log("COURSES:", courses);
+  const courses = await Course.find().populate("category");
 
   const formatted = courses.map((course) => ({
-  ...course.toObject(), // 🔥 FIX
-  thumbnail: course.image || "",
-  totalLessons: course.lessons || 0,
-  students: course.enrolled || 0,
-}));
+    ...course.toObject(),
+    thumbnail: course.image || "",
+    totalLessons: course.lessons || 0,
+    students: course.enrolled || 0,
+  }));
 
   res.json(formatted);
 });
 
 
-// GET SINGLE COURSE
+// ✅ GET SINGLE COURSE (🔥 VIDEO FIX HERE)
 router.get("/:id", async (req, res) => {
   try {
-    const course = await Course.findById(req.params.id).populate("category"); 
+    const course = await Course.findById(req.params.id).populate("category");
 
     if (!course) {
       return res.status(404).json({ message: "Course not found" });
     }
+
+    // 🔥 FETCH ALL LESSONS OF SAME CATEGORY
+    const lessons = await Lesson.find({ category: course.category });
 
     res.json({
       ...course._doc,
@@ -114,13 +115,24 @@ router.get("/:id", async (req, res) => {
       thumbnail: course.image || "",
       totalLessons: course.lessons || 0,
       students: course.enrolled || 0,
+
+      // 🔥 FIXED SECTIONS WITH VIDEO
       sections: course.courseContent?.map((section) => ({
         title: section.sectionTitle,
-        lessons: section.lectures?.map((lec) => ({
-          title: lec.title,
-          time: lec.duration,
-          type: "video",
-        })) || [],
+        lessons: section.lectures?.map((lec) => {
+
+          // 🔥 MATCH LESSON BY TITLE
+          const matchedLesson = lessons.find(
+            (l) => l.lectureTitle === lec.title
+          );
+
+          return {
+            title: lec.title,
+            time: lec.duration,
+            type: "video",
+            video: matchedLesson?.video || null, // ✅ VIDEO COMES HERE
+          };
+        }) || [],
       })) || [],
     });
 
@@ -168,14 +180,13 @@ router.put("/:id", upload.any(), async (req, res) => {
       courseContent = [];
     }
 
-    
     const totalLessons = courseContent.reduce((acc, section) => {
       return acc + (section.lectures?.length || 0);
     }, 0);
 
     const updatedData = {
       title: req.body.title,
-      lessons: totalLessons, // ✅ AUTO
+      lessons: totalLessons,
       category: req.body.category,
       level: req.body.level,
 

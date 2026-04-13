@@ -32,10 +32,7 @@ const courseSchema = new mongoose.Schema({
             ref: "Lesson"
           },
           title: String,
-          duration: String,
-
-          // 🔥 ADD THIS
-          video: String
+          duration: String
         }
       ]
     }
