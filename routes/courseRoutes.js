@@ -1,14 +1,12 @@
 const express = require("express");
 const router = express.Router();
 const Course = require("../models/Course");
-const Lesson = require("../models/Lesson"); // 🔥 ADD THIS
+const Lesson = require("../models/Lesson");
 const multer = require("multer");
-
 
 router.options("/", (req, res) => {
   res.sendStatus(200);
 });
-
 
 const storage = multer.diskStorage({
   destination: "uploads/",
@@ -20,6 +18,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 
+// ================= CREATE COURSE =================
 router.post("/", upload.any(), async (req, res) => {
   try {
     console.log("BODY:", req.body);
@@ -35,8 +34,7 @@ router.post("/", upload.any(), async (req, res) => {
             ? JSON.parse(req.body.whatYouWillLearn)
             : req.body.whatYouWillLearn;
       }
-    } catch (e) {
-      console.log("❌ Learn parse error:", e.message);
+    } catch {
       whatYouWillLearn = [];
     }
 
@@ -47,8 +45,7 @@ router.post("/", upload.any(), async (req, res) => {
             ? JSON.parse(req.body.courseContent)
             : req.body.courseContent;
       }
-    } catch (e) {
-      console.log("❌ Content parse error:", e.message);
+    } catch {
       courseContent = [];
     }
 
@@ -62,7 +59,6 @@ router.post("/", upload.any(), async (req, res) => {
       category: req.body.category,
       level: req.body.level,
       image: req.files?.[0]?.filename || null,
-
       description: req.body.description,
       instructor: req.body.instructor,
       duration: req.body.duration,
@@ -82,7 +78,7 @@ router.post("/", upload.any(), async (req, res) => {
 });
 
 
-// GET ALL COURSES
+// ================= GET ALL =================
 router.get("/", async (req, res) => {
   const courses = await Course.find().populate("category");
 
@@ -97,7 +93,7 @@ router.get("/", async (req, res) => {
 });
 
 
-// ✅ GET SINGLE COURSE (🔥 FINAL VIDEO FIX USING lessonId)
+// ================= GET SINGLE (🔥 FINAL FIX) =================
 router.get("/:id", async (req, res) => {
   try {
     const course = await Course.findById(req.params.id).populate("category");
@@ -106,15 +102,8 @@ router.get("/:id", async (req, res) => {
       return res.status(404).json({ message: "Course not found" });
     }
 
-    // 🔥 COLLECT ALL lessonIds
-    const lessonIds = course.courseContent.flatMap((section) =>
-      section.lectures.map((lec) => lec.lessonId)
-    );
-
-    // 🔥 FETCH ONLY REQUIRED LESSONS
-    const lessons = await Lesson.find({
-      _id: { $in: lessonIds }
-    });
+    // 🔥 GET ALL LESSONS
+    const lessons = await Lesson.find();
 
     res.json({
       ...course._doc,
@@ -123,20 +112,22 @@ router.get("/:id", async (req, res) => {
       totalLessons: course.lessons || 0,
       students: course.enrolled || 0,
 
-      // 🔥 FIXED SECTIONS WITH VIDEO
+      // 🔥 MATCH BY TITLE (WORKING)
       sections: course.courseContent?.map((section) => ({
         title: section.sectionTitle,
         lessons: section.lectures?.map((lec) => {
 
           const matchedLesson = lessons.find(
-            (l) => l._id.toString() === lec.lessonId?.toString()
+            (l) =>
+              l.lectureTitle?.trim().toLowerCase() ===
+              lec.title?.trim().toLowerCase()
           );
 
           return {
             title: lec.title,
             time: lec.duration,
             type: "video",
-            video: matchedLesson?.video || null,
+            video: matchedLesson?.video || null, // ✅ FIXED
           };
         }) || [],
       })) || [],
@@ -149,16 +140,16 @@ router.get("/:id", async (req, res) => {
 });
 
 
+// ================= DELETE =================
 router.delete("/:id", async (req, res) => {
   await Course.findByIdAndDelete(req.params.id);
   res.json({ message: "Deleted" });
 });
 
 
+// ================= UPDATE =================
 router.put("/:id", upload.any(), async (req, res) => {
   try {
-    console.log("UPDATE HIT:", req.params.id);
-
     let whatYouWillLearn = [];
     let courseContent = [];
 
@@ -169,8 +160,7 @@ router.put("/:id", upload.any(), async (req, res) => {
             ? JSON.parse(req.body.whatYouWillLearn)
             : req.body.whatYouWillLearn;
       }
-    } catch (e) {
-      console.log("❌ Learn parse error:", e.message);
+    } catch {
       whatYouWillLearn = [];
     }
 
@@ -181,8 +171,7 @@ router.put("/:id", upload.any(), async (req, res) => {
             ? JSON.parse(req.body.courseContent)
             : req.body.courseContent;
       }
-    } catch (e) {
-      console.log("❌ Content parse error:", e.message);
+    } catch {
       courseContent = [];
     }
 
@@ -195,7 +184,6 @@ router.put("/:id", upload.any(), async (req, res) => {
       lessons: totalLessons,
       category: req.body.category,
       level: req.body.level,
-
       description: req.body.description,
       instructor: req.body.instructor,
       duration: req.body.duration,
@@ -215,10 +203,6 @@ router.put("/:id", upload.any(), async (req, res) => {
       updatedData,
       { new: true }
     );
-
-    if (!updatedCourse) {
-      return res.status(404).json({ message: "Course not found" });
-    }
 
     res.json(updatedCourse);
   } catch (err) {
