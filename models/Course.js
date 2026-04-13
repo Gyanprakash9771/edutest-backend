@@ -7,7 +7,7 @@ const courseSchema = new mongoose.Schema({
   category: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Category",
-    required: true // ✅ optional but recommended
+    required: true
   },
 
   level: String,
@@ -27,8 +27,15 @@ const courseSchema = new mongoose.Schema({
       sectionTitle: String,
       lectures: [
         {
+          lessonId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Lesson"
+          },
           title: String,
-          duration: String
+          duration: String,
+
+          // 🔥 ADD THIS
+          video: String
         }
       ]
     }
