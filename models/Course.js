@@ -4,15 +4,15 @@ const courseSchema = new mongoose.Schema({
   title: String,
   lessons: Number,
 
-  
   category: {
-    type: mongoose.Schema.Types.Mixed
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Category",
+    required: true // ✅ optional but recommended
   },
 
   level: String,
   image: String,
 
-  
   description: String,
   instructor: String,
   duration: String,

@@ -81,68 +81,28 @@ router.post("/", upload.any(), async (req, res) => {
   }
 });
 
-// GET ALL COURSES
-// router.get("/", async (req, res) => {
-//   const courses = await Course.find();
 
-//   const formatted = courses.map((course) => ({
-//     ...course._doc,
-//     thumbnail: course.image || "",
-//     totalLessons: course.lessons || 0,
-//     students: course.enrolled || 0,
-//   }));
-
-//   res.json(formatted);
-// });
 
 // GET ALL COURSES
 router.get("/", async (req, res) => {
-  const courses = await Course.find().populate("category"); // ✅ added populate
+  const courses = await Course.find().populate("category"); 
+  console.log("COURSES:", courses);
 
   const formatted = courses.map((course) => ({
-    ...course._doc,
-    thumbnail: course.image || "",
-    totalLessons: course.lessons || 0,
-    students: course.enrolled || 0,
-  }));
+  ...course.toObject(), // 🔥 FIX
+  thumbnail: course.image || "",
+  totalLessons: course.lessons || 0,
+  students: course.enrolled || 0,
+}));
 
   res.json(formatted);
 });
 
-// GET SINGLE COURSE
-// router.get("/:id", async (req, res) => {
-//   try {
-//     const course = await Course.findById(req.params.id);
 
-//     if (!course) {
-//       return res.status(404).json({ message: "Course not found" });
-//     }
-
-//     res.json({
-//       ...course._doc,
-//       learn: course.whatYouWillLearn || [],
-//       thumbnail: course.image || "",
-//       totalLessons: course.lessons || 0,
-//       students: course.enrolled || 0,
-//       sections: course.courseContent?.map((section) => ({
-//         title: section.sectionTitle,
-//         lessons: section.lectures?.map((lec) => ({
-//           title: lec.title,
-//           time: lec.duration,
-//           type: "video",
-//         })) || [],
-//       })) || [],
-//     });
-
-//   } catch (err) {
-//     console.log(err);
-//     res.status(500).json(err);
-//   }
-// });
 // GET SINGLE COURSE
 router.get("/:id", async (req, res) => {
   try {
-    const course = await Course.findById(req.params.id).populate("category"); // ✅ added populate
+    const course = await Course.findById(req.params.id).populate("category"); 
 
     if (!course) {
       return res.status(404).json({ message: "Course not found" });
