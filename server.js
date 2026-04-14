@@ -7,6 +7,7 @@ const courseRoutes = require("./routes/courseRoutes");
 const adminAuthRoutes = require("./routes/adminAuthRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
 const lessonRoutes = require("./routes/lessonRoutes");
+const progressRoutes = require("./routes/progressRoutes");
 
 const app = express();
 
@@ -37,6 +38,7 @@ app.use("/api/courses", courseRoutes);
 app.use("/api/admin", adminAuthRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/lessons", lessonRoutes);
+app.use("/api/progress", progressRoutes);
 
 
 app.get("/", (req, res) => {
