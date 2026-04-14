@@ -31,10 +31,8 @@ const courseSchema = new mongoose.Schema(
             lessonId: {
               type: mongoose.Schema.Types.ObjectId,
               ref: "Lesson",
-              required: true, // ✅ important
+              required: true,
             },
-            title: String,
-            duration: String,
           },
         ],
       },

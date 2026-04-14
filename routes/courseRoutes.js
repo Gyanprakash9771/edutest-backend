@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
 const Course = require("../models/Course");
-const Lesson = require("../models/Lesson");
 const multer = require("multer");
 
 router.options("/", (req, res) => {
@@ -21,9 +20,6 @@ const upload = multer({ storage });
 // ================= CREATE COURSE =================
 router.post("/", upload.any(), async (req, res) => {
   try {
-    console.log("BODY:", req.body);
-    console.log("FILES:", req.files);
-
     let whatYouWillLearn = [];
     let courseContent = [];
 
@@ -48,6 +44,14 @@ router.post("/", upload.any(), async (req, res) => {
     } catch {
       courseContent = [];
     }
+
+    // ✅ CLEAN DATA (IMPORTANT FIX)
+    courseContent = courseContent.map(section => ({
+      sectionTitle: section.sectionTitle,
+      lectures: section.lectures.map(lec => ({
+        lessonId: lec.lessonId
+      }))
+    }));
 
     const totalLessons = courseContent.reduce((acc, section) => {
       return acc + (section.lectures?.length || 0);
@@ -93,16 +97,16 @@ router.get("/", async (req, res) => {
 });
 
 
-// ================= GET SINGLE (🔥 FIXED HERE) =================
+// ================= GET SINGLE (🔥 FIXED) =================
 router.get("/:id", async (req, res) => {
   try {
-    const course = await Course.findById(req.params.id).populate("category");
+    const course = await Course.findById(req.params.id)
+      .populate("category")
+      .populate("courseContent.lectures.lessonId"); // ✅ IMPORTANT
 
     if (!course) {
       return res.status(404).json({ message: "Course not found" });
     }
-
-    const lessons = await Lesson.find();
 
     res.json({
       ...course._doc,
@@ -113,27 +117,13 @@ router.get("/:id", async (req, res) => {
 
       sections: course.courseContent?.map((section) => ({
         title: section.sectionTitle,
-        lessons: section.lectures?.map((lec) => {
-
-          // 🔥 DEBUG (you can remove later)
-          console.log("COURSE TITLE:", lec.title);
-          console.log("LESSONS:", lessons.map(l => l.lectureTitle));
-
-          // 🔥 FIX (IMPORTANT CHANGE)
-          const matchedLesson = lessons.find(
-            (l) =>
-              l.lectureTitle?.trim().toLowerCase().includes(
-                lec.title?.trim().toLowerCase()
-              )
-          );
-
-          return {
-            title: lec.title,
-            time: lec.duration,
-            type: "video",
-            video: matchedLesson?.video || null,
-          };
-        }) || [],
+        lessons: section.lectures?.map((lec) => ({
+          title: lec.lessonId?.lectureTitle,
+          time: lec.lessonId?.duration,
+          type: "video",
+          video: lec.lessonId?.video,
+          lessonId: lec.lessonId?._id, // 🔥 IMPORTANT
+        })) || [],
       })) || [],
     });
 
@@ -178,6 +168,14 @@ router.put("/:id", upload.any(), async (req, res) => {
     } catch {
       courseContent = [];
     }
+
+    // ✅ CLEAN DATA (IMPORTANT FIX)
+    courseContent = courseContent.map(section => ({
+      sectionTitle: section.sectionTitle,
+      lectures: section.lectures.map(lec => ({
+        lessonId: lec.lessonId
+      }))
+    }));
 
     const totalLessons = courseContent.reduce((acc, section) => {
       return acc + (section.lectures?.length || 0);
