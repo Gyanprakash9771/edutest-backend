@@ -57,21 +57,25 @@ router.post("/", upload.any(), async (req, res) => {
       return acc + (section.lectures?.length || 0);
     }, 0);
 
-    const course = new Course({
-      title: req.body.title,
-      lessons: totalLessons,
-      category: req.body.category,
-      level: req.body.level,
-      image: req.files?.[0]?.filename || null,
-      description: req.body.description,
-      instructor: req.body.instructor,
-      duration: req.body.duration,
-      enrolled: Number(req.body.enrolled),
-      language: req.body.language,
-      price: req.body.price,
-      whatYouWillLearn,
-      courseContent,
-    });
+   const course = new Course({
+  title: req.body.title,
+  lessons: totalLessons,
+  category: req.body.category,
+  level: req.body.level,
+  image: req.files?.[0]?.filename || null,
+
+  // ✅ ADDED THIS LINE
+  previewVideo: req.body.previewVideo,
+
+  description: req.body.description,
+  instructor: req.body.instructor,
+  duration: req.body.duration,
+  enrolled: Number(req.body.enrolled),
+  language: req.body.language,
+  price: req.body.price,
+  whatYouWillLearn,
+  courseContent,
+});
 
     await course.save();
     res.json(course);
@@ -84,7 +88,7 @@ router.post("/", upload.any(), async (req, res) => {
 
 // ================= GET ALL =================
 router.get("/", async (req, res) => {
-  const courses = await Course.find().populate("category");
+  const courses = await Course.find().populate("category").populate("courseContent.lectures.lessonId");
 
   const formatted = courses.map((course) => ({
     ...course.toObject(),
@@ -181,20 +185,24 @@ router.put("/:id", upload.any(), async (req, res) => {
       return acc + (section.lectures?.length || 0);
     }, 0);
 
-    const updatedData = {
-      title: req.body.title,
-      lessons: totalLessons,
-      category: req.body.category,
-      level: req.body.level,
-      description: req.body.description,
-      instructor: req.body.instructor,
-      duration: req.body.duration,
-      enrolled: Number(req.body.enrolled),
-      language: req.body.language,
-      price: req.body.price,
-      whatYouWillLearn,
-      courseContent,
-    };
+  const updatedData = {
+  title: req.body.title,
+  lessons: totalLessons,
+  category: req.body.category,
+  level: req.body.level,
+
+  // ✅ ADDED THIS LINE
+ previewVideo: req.body.previewVideo || "",
+
+  description: req.body.description,
+  instructor: req.body.instructor,
+  duration: req.body.duration,
+  enrolled: Number(req.body.enrolled),
+  language: req.body.language,
+  price: req.body.price,
+  whatYouWillLearn,
+  courseContent,
+};
 
     if (req.files?.[0]) {
       updatedData.image = req.files[0].filename;

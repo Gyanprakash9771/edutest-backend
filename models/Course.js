@@ -13,6 +13,7 @@ const courseSchema = new mongoose.Schema(
 
     level: String,
     image: String,
+    previewVideo: String,  //✅ ADD THIS
 
     description: String,
     instructor: String,
